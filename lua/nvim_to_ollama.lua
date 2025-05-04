@@ -49,59 +49,65 @@ local function show_floating_window(text_lines)
   })
 end
 
+local function show_reply_to_floating_win(reply)
+  -- Split into lines
+  local lines = vim.split(reply or "", "\n")
+
+  -- Remove first line if it's a code fence
+  if lines[1]:match("^```") then
+    table.remove(lines, 1)
+  end
+
+  -- Remove last line if it's a closing ```
+  if lines[#lines]:match("^```%s*$") then
+    table.remove(lines, #lines)
+  end
+
+  -- Show in floating window
+  show_floating_window(lines)
+end
+
 function M.send_selection_to_chat()
-	local user_text = get_visual_selection()
+  local user_text = get_visual_selection()
 
-	if user_text == "" then
-		print("No selection found.")
-		return
-	end
+  if user_text == "" then
+    print("No selection found.")
+    return
+  end
 
-	local payload = {
-		model = "qwen2.5-coder",
-		messages = {
-			{ role = "system", content = "You are a test assistant." },
-			{ role = "user", content = user_text },
-		}
-	}
+  local payload = {
+    model = "qwen2.5-coder",
+    messages = {
+      { role = "system", content = "You are a test assistant." },
+      { role = "user", content = user_text },
+    }
+  }
 
-	local json_payload = vim.fn.json_encode(payload)
+  local json_payload = vim.fn.json_encode(payload)
 
-	local cmd = {
-		"curl", "-s",
-		"http://localhost:11434/v1/chat/completions",
-		"-H", "Content-Type: application/json",
-		"-d", json_payload
-	}
+  local cmd = {
+    "curl", "-s",
+    --"http://localhost:11434/v1/chat/completions",
+    "http://localhost:8888/v1/chat/completions",
+    "-H", "Content-Type: application/json",
+    "-d", json_payload
+  }
 
-	local result = vim.fn.system(cmd)
-	local ok, response = pcall(vim.fn.json_decode, result)
+  local result = vim.fn.system(cmd)
+  local ok, response = pcall(vim.fn.json_decode, result)
 
-	if not ok or not response or not response.choices or not response.choices[1] then
-		print("Error from chat API")
-		return
-	end
+  if not ok or not response or not response.choices or not response.choices[1] then
+    print("Error from chat API")
+    return
+  end
 
-	local reply = response.choices[1].message.content
+  local reply = response.choices[1].message.content
+	vim.print(response)
+	vim.print(reply)
+	--vim.print(reply)
 
-	local row = vim.api.nvim_win_get_cursor(0)[1]
-	-- Split into lines
-	local lines = vim.split(reply or "", "\n")
-
-	-- Remove first line if it's a code fence
-	if lines[1]:match("^```") then
-		table.remove(lines, 1)
-	end
-
-	-- Remove last line if it's a closing ```
-	if lines[#lines]:match("^```%s*$") then
-		table.remove(lines, #lines)
-	end
-
-	-- Show in floating window
-	show_floating_window(lines)
-	 
-	--vim.api.nvim_buf_set_lines(0, row, row, false, vim.split(reply, "\n"))
+  -- Call the new function
+  --show_reply_to_floating_win(reply)
 end
 
 return M
