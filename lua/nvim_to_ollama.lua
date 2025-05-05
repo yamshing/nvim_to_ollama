@@ -1,5 +1,5 @@
 local M = {}
-
+local m_user_input = ""
 -- Utility: Get visual selection
 local function get_visual_selection()
 	local start_pos = vim.fn.getpos("'<")
@@ -49,7 +49,7 @@ local function show_floating_window(text_lines)
   })
 end
 
-local function show_reply_to_floating_win(reply)
+function M.show_reply_to_floating_win(reply)
   -- Split into lines
   local lines = vim.split(reply or "", "\n")
 
@@ -67,14 +67,7 @@ local function show_reply_to_floating_win(reply)
   show_floating_window(lines)
 end
 
-function M.send_selection_to_chat()
-  local user_text = get_visual_selection()
-
-  if user_text == "" then
-    print("No selection found.")
-    return
-  end
-
+local function process_chat_api_request(user_text)
   local payload = {
     model = "qwen2.5-coder",
     messages = {
@@ -98,16 +91,26 @@ function M.send_selection_to_chat()
 
   if not ok or not response or not response.choices or not response.choices[1] then
     print("Error from chat API")
+    return nil
+  end
+
+  return response.choices[1].message.content
+end
+
+function M.send_selection_to_chat()
+  local user_text = get_visual_selection()
+
+  if user_text == "" then
+    print("No selection found.")
     return
   end
 
-  local reply = response.choices[1].message.content
-	vim.print(response)
-	vim.print(reply)
-	--vim.print(reply)
-
+  m_user_input = user_text
   -- Call the new function
-  --show_reply_to_floating_win(reply)
+  local reply = process_chat_api_request(user_text)
+  if not reply then return end
+
+  show_reply_to_floating_win(reply)
 end
 
 return M
