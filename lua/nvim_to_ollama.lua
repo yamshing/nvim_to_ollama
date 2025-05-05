@@ -80,60 +80,86 @@ function _G.close_both_floats()
 	end
   end
 	 
-	local function show_diff_floating_window(diff_lines)
-		local buf_left = vim.api.nvim_create_buf(false, true)
-		local buf_right = vim.api.nvim_create_buf(false, true)
+local function show_diff_floating_window(diff_lines)
 
-		local left_lines = {}
-		local right_lines = {}
+	 local buf_left = vim.api.nvim_create_buf(false, true)
+  local buf_right = vim.api.nvim_create_buf(false, true)
 
-		for _, line in ipairs(diff_lines) do
-			local prefix = line:sub(1, 1)
-			if prefix == "-" then
-				table.insert(left_lines, line:sub(2))
-				table.insert(right_lines, "")
-			elseif prefix == "+" then
-				table.insert(left_lines, "")
-				table.insert(right_lines, line:sub(2))
-			elseif prefix == " " or prefix == "" then
-				table.insert(left_lines, line:sub(2))
-				table.insert(right_lines, line:sub(2))
-			end
-			-- skip lines like @@ and --- / +++ file headers
-		end
+  local left_lines = {}
+  local right_lines = {}
+  local left_hl = {}
+  local right_hl = {}
 
-		if #left_lines == 0 then
-			table.insert(left_lines, "No differences found.")
-			table.insert(right_lines, "No differences found.")
-		end
+  for li, line in ipairs(diff_lines) do
+    local prefix = line:sub(1, 1)
+    local content = line:sub(2)
+		--vim.print("li",li, prefix)
+    if prefix == "-" then
+      table.insert(left_lines, content)
+      table.insert(right_lines, "")
+      table.insert(left_hl, "DiffDelete")  -- red
+      table.insert(right_hl, false)
+			vim.print("diffdel insert",li)
+    elseif prefix == "+" then
+      table.insert(left_lines, "")
+      table.insert(right_lines, content)
+      table.insert(left_hl, false)
+      table.insert(right_hl, "DiffAdd")  -- green
+    elseif prefix == " " or prefix == "" then
+      table.insert(left_lines, content)
+      table.insert(right_lines, content)
+      table.insert(left_hl, false)
+      table.insert(right_hl, false)
+    end
+  end
 
-		vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
-		vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
+  if #left_lines == 0 then
+    table.insert(left_lines, "No differences found.")
+    table.insert(right_lines, "No differences found.")
+  end
 
-		local width = math.floor(vim.o.columns * 0.4)
-		local height = math.floor(vim.o.lines * 0.4)
-		local row = math.floor((vim.o.lines - height) / 2)
-		local col_gap = math.floor((vim.o.columns - 2 * width) / 3)
+  vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
+  vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
 
-		_G.float_win_left = vim.api.nvim_open_win(buf_left, true, {
-			relative = "editor",
-			width = width,
-			height = height,
-			row = row,
-			col = col_gap,
-			style = "minimal",
-			border = "rounded",
-		})
+	vim.print(left_hl)
+  -- Add highlights
+  for i, hl in ipairs(left_hl) do
+    if hl then
+			vim.print("left buf",i - 1,hl)
+      vim.api.nvim_buf_add_highlight(buf_left, -1, hl, i - 1, 0, -1)
+    end
+  end
 
-		_G.float_win_right = vim.api.nvim_open_win(buf_right, true, {
-			relative = "editor",
-			width = width,
-			height = height,
-			row = row,
-			col = col_gap + width + col_gap,
-			style = "minimal",
-			border = "rounded",
-		})
+  for i, hl in ipairs(right_hl) do
+    if hl then
+      vim.api.nvim_buf_add_highlight(buf_right, -1, hl, i - 1, 0, -1)
+    end
+  end
+
+  local width = math.floor(vim.o.columns * 0.4)
+  local height = math.floor(vim.o.lines * 0.4)
+  local row = math.floor((vim.o.lines - height) / 2)
+  local col_gap = math.floor((vim.o.columns - 2 * width) / 3)
+
+  _G.float_win_left = vim.api.nvim_open_win(buf_left, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col_gap,
+    style = "minimal",
+    border = "rounded",
+  })
+
+  _G.float_win_right = vim.api.nvim_open_win(buf_right, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = col_gap + width + col_gap,
+    style = "minimal",
+    border = "rounded",
+  })
 	--set keymaps for closing the windows
 	vim.api.nvim_buf_set_keymap(buf_left, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
 	vim.api.nvim_buf_set_keymap(buf_right, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
