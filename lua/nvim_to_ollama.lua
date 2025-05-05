@@ -50,16 +50,26 @@ local function show_floating_window(text_lines)
 end
 
 local function diff_user_input_and_lines(user_input, lines)
-  local diff = {}
+	--local joined = table.concat(lines,"\n")
   local input_lines = vim.split(user_input or "", "\n")
+	local tmp1 = vim.fn.tempname()
+  local tmp2 = vim.fn.tempname()
+	vim.fn.writefile(input_lines, tmp1)
+	vim.fn.writefile(lines, tmp2)
+	local output = vim.fn.system({'diff', '-u', tmp1, tmp2})
+	local splitted = vim.split(output, '\n')
+	--vim.print(output)
+	return splitted
+	 
+  -- local diff = {}
+	--  
+  -- for i, line in ipairs(lines) do
+  --   if line ~= input_lines[i] then
+  --     table.insert(diff, { line_number = i, original = input_lines[i] or "", modified = line })
+  --   end
+  -- end
 
-  for i, line in ipairs(lines) do
-    if line ~= input_lines[i] then
-      table.insert(diff, { line_number = i, original = input_lines[i] or "", modified = line })
-    end
-  end
-
-  return diff
+  -- return diff
 end
 
 function _G.close_both_floats()
@@ -69,56 +79,64 @@ function _G.close_both_floats()
 	  end
 	end
   end
-  
-  
-local function show_diff_floating_window(diff)
-  local buf_left = vim.api.nvim_create_buf(false, true) -- scratch, no listed
-  local buf_right = vim.api.nvim_create_buf(false, true) -- scratch, no listed
-  local current_buf = vim.api.nvim_get_current_buf()
+	 
+	local function show_diff_floating_window(diff_lines)
+		local buf_left = vim.api.nvim_create_buf(false, true)
+		local buf_right = vim.api.nvim_create_buf(false, true)
 
-  local left_lines = {}
-  local right_lines = {}
+		local left_lines = {}
+		local right_lines = {}
 
-  for _, change in ipairs(diff) do
-    table.insert(left_lines, string.format("%s", change.original))
-    table.insert(right_lines, string.format("%s", change.modified))
-  end
+		for _, line in ipairs(diff_lines) do
+			local prefix = line:sub(1, 1)
+			if prefix == "-" then
+				table.insert(left_lines, line:sub(2))
+				table.insert(right_lines, "")
+			elseif prefix == "+" then
+				table.insert(left_lines, "")
+				table.insert(right_lines, line:sub(2))
+			elseif prefix == " " or prefix == "" then
+				table.insert(left_lines, line:sub(2))
+				table.insert(right_lines, line:sub(2))
+			end
+			-- skip lines like @@ and --- / +++ file headers
+		end
 
-  if #left_lines == 0 then
-    table.insert(left_lines, "No differences found.")
-    table.insert(right_lines, "No differences found.")
-  end
+		if #left_lines == 0 then
+			table.insert(left_lines, "No differences found.")
+			table.insert(right_lines, "No differences found.")
+		end
 
-  vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
-  vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
+		vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
+		vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
 
-  local width = math.floor(vim.o.columns * 0.4)
-  local height = math.floor(vim.o.lines * 0.4)
-  local row = math.floor((vim.o.lines - height) / 2)
+		local width = math.floor(vim.o.columns * 0.4)
+		local height = math.floor(vim.o.lines * 0.4)
+		local row = math.floor((vim.o.lines - height) / 2)
+		local col_gap = math.floor((vim.o.columns - 2 * width) / 3)
 
-  _G.float_win_left = vim.api.nvim_open_win(buf_left, true, {
-    relative = "editor",
-    width = width,
-    height = height,
-    row = row,
-    col = math.floor((vim.o.columns - 2 * width) / 3),
-    style = "minimal",
-    border = "rounded",
-  })
+		_G.float_win_left = vim.api.nvim_open_win(buf_left, true, {
+			relative = "editor",
+			width = width,
+			height = height,
+			row = row,
+			col = col_gap,
+			style = "minimal",
+			border = "rounded",
+		})
 
-  _G.float_win_right = vim.api.nvim_open_win(buf_right, true, {
-    relative = "editor",
-    width = width,
-    height = height,
-    row = row,
-    col = math.floor((vim.o.columns - 2 * width) / 3) + width + math.floor((vim.o.columns - 2 * width) / 3),
-    style = "minimal",
-    border = "rounded",
-  })
-  --set keymaps for closing the windows
-  vim.api.nvim_buf_set_keymap(buf_left, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
-  vim.api.nvim_buf_set_keymap(buf_right, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
-
+		_G.float_win_right = vim.api.nvim_open_win(buf_right, true, {
+			relative = "editor",
+			width = width,
+			height = height,
+			row = row,
+			col = col_gap + width + col_gap,
+			style = "minimal",
+			border = "rounded",
+		})
+	--set keymaps for closing the windows
+	vim.api.nvim_buf_set_keymap(buf_left, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
+	vim.api.nvim_buf_set_keymap(buf_right, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
 end
 
 local function show_reply_to_floating_win(reply)
@@ -145,7 +163,6 @@ local function show_reply_to_floating_win(reply)
   --show_floating_window(lines)
 end
 
-M.show_reply_to_floating_win = show_reply_to_floating_win
 
 local function process_chat_api_request(user_text)
   local payload = {
@@ -187,16 +204,18 @@ function M.send_selection_to_chat()
     print("No selection found.")
     return
   end
+  m_user_input = user_text
 	user_text = head .. user_text
 	user_text = user_text .. foot
 	 
-  m_user_input = user_text
   -- Call the new function
   local reply = process_chat_api_request(user_text)
   if not reply then return end
 
   show_reply_to_floating_win(reply)
 end
+
+M.show_reply_to_floating_win = show_reply_to_floating_win
 
 return M
 
