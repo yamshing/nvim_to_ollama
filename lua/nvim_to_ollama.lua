@@ -178,13 +178,18 @@ local function process_chat_api_request(user_text)
 end
 
 function M.send_selection_to_chat()
+	local head = '< |User| > refactor this code by changing i to index and output just the code without explanation. Add ``` to show the language used:\n'
+	local foot = '\n<|Assistant|>'
+	 
   local user_text = get_visual_selection()
 
   if user_text == "" then
     print("No selection found.")
     return
   end
-
+	user_text = head .. user_text
+	user_text = user_text .. foot
+	 
   m_user_input = user_text
   -- Call the new function
   local reply = process_chat_api_request(user_text)
