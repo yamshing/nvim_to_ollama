@@ -49,7 +49,79 @@ local function show_floating_window(text_lines)
   })
 end
 
-function M.show_reply_to_floating_win(reply)
+local function diff_user_input_and_lines(user_input, lines)
+  local diff = {}
+  local input_lines = vim.split(user_input or "", "\n")
+
+  for i, line in ipairs(lines) do
+    if line ~= input_lines[i] then
+      table.insert(diff, { line_number = i, original = input_lines[i] or "", modified = line })
+    end
+  end
+
+  return diff
+end
+
+function _G.close_both_floats()
+	for _, win in ipairs({ _G.float_win_left, _G.float_win_right }) do
+	  if win and vim.api.nvim_win_is_valid(win) then
+		vim.api.nvim_win_close(win, true)
+	  end
+	end
+  end
+  
+  
+local function show_diff_floating_window(diff)
+  local buf_left = vim.api.nvim_create_buf(false, true) -- scratch, no listed
+  local buf_right = vim.api.nvim_create_buf(false, true) -- scratch, no listed
+  local current_buf = vim.api.nvim_get_current_buf()
+
+  local left_lines = {}
+  local right_lines = {}
+
+  for _, change in ipairs(diff) do
+    table.insert(left_lines, string.format("%s", change.original))
+    table.insert(right_lines, string.format("%s", change.modified))
+  end
+
+  if #left_lines == 0 then
+    table.insert(left_lines, "No differences found.")
+    table.insert(right_lines, "No differences found.")
+  end
+
+  vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
+  vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
+
+  local width = math.floor(vim.o.columns * 0.4)
+  local height = math.floor(vim.o.lines * 0.4)
+  local row = math.floor((vim.o.lines - height) / 2)
+
+  _G.float_win_left = vim.api.nvim_open_win(buf_left, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = math.floor((vim.o.columns - 2 * width) / 3),
+    style = "minimal",
+    border = "rounded",
+  })
+
+  _G.float_win_right = vim.api.nvim_open_win(buf_right, true, {
+    relative = "editor",
+    width = width,
+    height = height,
+    row = row,
+    col = math.floor((vim.o.columns - 2 * width) / 3) + width + math.floor((vim.o.columns - 2 * width) / 3),
+    style = "minimal",
+    border = "rounded",
+  })
+  --set keymaps for closing the windows
+  vim.api.nvim_buf_set_keymap(buf_left, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
+  vim.api.nvim_buf_set_keymap(buf_right, 'n', 'q', '<cmd>lua close_both_floats()<CR>', { noremap = true, silent = true })
+
+end
+
+local function show_reply_to_floating_win(reply)
   -- Split into lines
   local lines = vim.split(reply or "", "\n")
 
@@ -63,9 +135,17 @@ function M.show_reply_to_floating_win(reply)
     table.remove(lines, #lines)
   end
 
-  -- Show in floating window
-  show_floating_window(lines)
+  -- Compute diff with m_user_input
+  local diff = diff_user_input_and_lines(m_user_input, lines)
+
+  -- Show the diff in a floating window
+  show_diff_floating_window(diff)
+
+  -- Show the reply in a floating window
+  --show_floating_window(lines)
 end
+
+M.show_reply_to_floating_win = show_reply_to_floating_win
 
 local function process_chat_api_request(user_text)
   local payload = {
