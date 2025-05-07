@@ -1,5 +1,5 @@
 local M = {}
-local m_user_input = ""
+M.m_user_input = ""
 -- Utility: Get visual selection
 local function get_visual_selection()
 	local start_pos = vim.fn.getpos("'<")
@@ -172,9 +172,14 @@ local function show_diff_floating_window(diff_lines)
 end
 
 local function show_reply_to_floating_win(reply)
+  -- replace \0 with \n
+  reply = reply:gsub("%z", "")
+
+	vim.print(reply)
   -- Split into lines
   local lines = vim.split(reply or "", "\n")
 
+	vim.print(lines)
   -- Remove first line if it's a code fence
   if lines[1]:match("^%s*```") then
     table.remove(lines, 1)
@@ -185,9 +190,8 @@ local function show_reply_to_floating_win(reply)
     table.remove(lines, #lines)
   end
 
-
-  -- Compute diff with m_user_input
-  local diff = diff_user_input_and_lines(m_user_input, lines)
+  -- Compute diff with M.m_user_input
+  local diff = diff_user_input_and_lines(M.m_user_input, lines)
 
   -- Show the diff in a floating window
   show_diff_floating_window(diff)
@@ -237,7 +241,7 @@ function M.send_selection_to_chat()
     print("No selection found.")
     return
   end
-  m_user_input = user_text
+  M.m_user_input = user_text
 	user_text = head .. user_text
 	user_text = user_text .. foot
 	 
