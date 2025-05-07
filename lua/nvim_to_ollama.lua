@@ -127,7 +127,7 @@ local function show_diff_floating_window(diff_lines)
   vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
   vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
 
-	vim.print(left_hl)
+	--vim.print(left_hl)
   -- Add highlights
   for i, hl in ipairs(left_hl) do
     if hl then
@@ -175,11 +175,11 @@ local function show_reply_to_floating_win(reply)
   -- replace \0 with \n
   reply = reply:gsub("%z", "")
 
-	vim.print(reply)
+	--vim.print(reply)
   -- Split into lines
   local lines = vim.split(reply or "", "\n")
 
-	vim.print(lines)
+	--vim.print(lines)
   -- Remove first line if it's a code fence
   if lines[1]:match("^%s*```") then
     table.remove(lines, 1)
@@ -192,9 +192,11 @@ local function show_reply_to_floating_win(reply)
 
   -- Compute diff with M.m_user_input
   local diff = diff_user_input_and_lines(M.m_user_input, lines)
+	--vim.print('diff------------------------------')
+	--vim.print(diff)
 
   -- Show the diff in a floating window
-  show_diff_floating_window(diff)
+  M.show_diff_floating_window(diff)
 
   -- Show the reply in a floating window
   --show_floating_window(lines)
@@ -258,7 +260,7 @@ function M.send_selection_to_chat()
 end
 
 M.show_reply_to_floating_win = show_reply_to_floating_win
-
+M.show_diff_floating_window = show_diff_floating_window 
 return M
 
 
