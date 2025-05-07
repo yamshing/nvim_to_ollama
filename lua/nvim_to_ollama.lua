@@ -91,15 +91,20 @@ local function show_diff_floating_window(diff_lines)
   local right_hl = {}
 
   for li, line in ipairs(diff_lines) do
+    --vim.print("li",li, line)
     local prefix = line:sub(1, 1)
     local content = line:sub(2)
 		--vim.print("li",li, prefix)
+    if line:match("^%-%-%- /.+") or line:match("^%+%+%+ /.+") then
+      -- Skip file info lines
+      goto continue
+    end
     if prefix == "-" then
       table.insert(left_lines, content)
       table.insert(right_lines, "")
       table.insert(left_hl, "DiffDelete")  -- red
       table.insert(right_hl, false)
-			vim.print("diffdel insert",li)
+			--vim.print("diffdel insert",li)
     elseif prefix == "+" then
       table.insert(left_lines, "")
       table.insert(right_lines, content)
@@ -111,6 +116,7 @@ local function show_diff_floating_window(diff_lines)
       table.insert(left_hl, false)
       table.insert(right_hl, false)
     end
+    ::continue::
   end
 
   if #left_lines == 0 then
@@ -125,7 +131,7 @@ local function show_diff_floating_window(diff_lines)
   -- Add highlights
   for i, hl in ipairs(left_hl) do
     if hl then
-			vim.print("left buf",i - 1,hl)
+			--vim.print("left buf",i - 1,hl)
       vim.api.nvim_buf_add_highlight(buf_left, -1, hl, i - 1, 0, -1)
     end
   end
@@ -170,14 +176,15 @@ local function show_reply_to_floating_win(reply)
   local lines = vim.split(reply or "", "\n")
 
   -- Remove first line if it's a code fence
-  if lines[1]:match("^```") then
+  if lines[1]:match("^%s*```") then
     table.remove(lines, 1)
   end
 
   -- Remove last line if it's a closing ```
-  if lines[#lines]:match("^```%s*$") then
+  if lines[#lines]:match("^%s*```%s*$") then
     table.remove(lines, #lines)
   end
+
 
   -- Compute diff with m_user_input
   local diff = diff_user_input_and_lines(m_user_input, lines)
@@ -204,7 +211,7 @@ local function process_chat_api_request(user_text)
   local cmd = {
     "curl", "-s",
     --"http://localhost:11434/v1/chat/completions",
-    "http://localhost:8888/v1/chat/completions",
+    "http://localhost:11434/v1/chat/completions",
     "-H", "Content-Type: application/json",
     "-d", json_payload
   }
@@ -237,6 +244,11 @@ function M.send_selection_to_chat()
   -- Call the new function
   local reply = process_chat_api_request(user_text)
   if not reply then return end
+
+  -- append the reply to the log file
+  local log_file = vim.fn.expand("~/.cache/nvim/ollama.log")
+  local log_entry = os.date("%Y-%m-%d %H:%M:%S") .. " - " .. reply .. "\n"
+  vim.fn.writefile({ log_entry }, log_file, "a")
 
   show_reply_to_floating_win(reply)
 end
