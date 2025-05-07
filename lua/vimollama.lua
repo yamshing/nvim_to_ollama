@@ -157,7 +157,7 @@ function Vimollama:show_reply_to_floating_win(reply)
 	print('diff ------------------------------')
 	print(diff)
 	 
-  --M.show_diff_floating_window(diff)
+  self:show_diff_floating_window(diff)
 end
 function Vimollama:get_visual_selection()
 	local start_pos = vim.fn.getpos("'<")
@@ -227,7 +227,7 @@ function Vimollama:send_selection_to_chat()
     print("No selection found.")
     return
   end
-  M.m_user_input = user_text
+  self.m_user_input = user_text
 	user_text = head .. user_text
 	user_text = user_text .. foot
 	 
