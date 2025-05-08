@@ -43,37 +43,26 @@ function NvimToOllama:diff_user_input_and_lines(lines)
 	--vim.print(output)
 	return splitted
 end
- 
-function NvimToOllama:show_diff_floating_window(diff_lines)
 
-	local buf_left = vim.api.nvim_create_buf(false, true)
-  local buf_right = vim.api.nvim_create_buf(false, true)
-
+function NvimToOllama:set_lines(diff_lines)
   local left_lines = {}
   local right_lines = {}
   local left_hl = {}
   local right_hl = {}
 
   for li, line in ipairs(diff_lines) do
-    --vim.print("li",li, line)
     local prefix = line:sub(1, 1)
     local content = line:sub(2)
-		vim.print("li",li, line)
+    vim.print("li", li, line)
     if line:match("^%-%-%- /.+") or line:match("^%+%+%+ /.+") then
-      -- Skip file info lines
       goto continue
     end
     if prefix == "-" then
       table.insert(left_lines, content)
-      --table.insert(right_lines, "")
-      table.insert(left_hl, "DiffDelete")  -- red
-      --table.insert(right_hl, false)
-			--vim.print("diffdel insert",li)
+      table.insert(left_hl, "DiffDelete")
     elseif prefix == "+" then
-      --table.insert(left_lines, "")
       table.insert(right_lines, content)
-      --table.insert(left_hl, false)
-      table.insert(right_hl, "DiffAdd")  -- green
+      table.insert(right_hl, "DiffAdd")
     elseif prefix == " " or prefix == "" then
       table.insert(left_lines, content)
       table.insert(right_lines, content)
@@ -87,6 +76,16 @@ function NvimToOllama:show_diff_floating_window(diff_lines)
     table.insert(left_lines, "No differences found.")
     table.insert(right_lines, "No differences found.")
   end
+
+  return left_lines, right_lines, left_hl, right_hl
+end
+ 
+function NvimToOllama:show_diff_floating_window(diff_lines)
+
+	local buf_left = vim.api.nvim_create_buf(false, true)
+  local buf_right = vim.api.nvim_create_buf(false, true)
+
+  local left_lines, right_lines, left_hl, right_hl = self:set_lines(diff_lines)
 
   vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
   vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
