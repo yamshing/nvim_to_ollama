@@ -44,7 +44,7 @@ function NvimToOllama:diff_user_input_and_lines(lines)
 	return splitted
 end
 
-function NvimToOllama:set_lines(diff_lines)
+function NvimToOllama:set_diff_lines(diff_lines)
   local left_lines = {}
   local right_lines = {}
   local left_hl = {}
@@ -53,7 +53,7 @@ function NvimToOllama:set_lines(diff_lines)
   for li, line in ipairs(diff_lines) do
     local prefix = line:sub(1, 1)
     local content = line:sub(2)
-    vim.print("li", li, line)
+    --vim.print("li", li, line)
     if line:match("^%-%-%- /.+") or line:match("^%+%+%+ /.+") then
       goto continue
     end
@@ -85,7 +85,7 @@ function NvimToOllama:show_diff_floating_window(diff_lines)
 	local buf_left = vim.api.nvim_create_buf(false, true)
   local buf_right = vim.api.nvim_create_buf(false, true)
 
-  local left_lines, right_lines, left_hl, right_hl = self:set_lines(diff_lines)
+  local left_lines, right_lines, left_hl, right_hl = self:set_diff_lines(diff_lines)
 
   vim.api.nvim_buf_set_lines(buf_left, 0, -1, false, left_lines)
   vim.api.nvim_buf_set_lines(buf_right, 0, -1, false, right_lines)
