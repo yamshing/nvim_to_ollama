@@ -58,21 +58,21 @@ function NvimToOllama:show_diff_floating_window(diff_lines)
     --vim.print("li",li, line)
     local prefix = line:sub(1, 1)
     local content = line:sub(2)
-		--vim.print("li",li, prefix)
+		vim.print("li",li, line)
     if line:match("^%-%-%- /.+") or line:match("^%+%+%+ /.+") then
       -- Skip file info lines
       goto continue
     end
     if prefix == "-" then
       table.insert(left_lines, content)
-      table.insert(right_lines, "")
+      --table.insert(right_lines, "")
       table.insert(left_hl, "DiffDelete")  -- red
-      table.insert(right_hl, false)
+      --table.insert(right_hl, false)
 			--vim.print("diffdel insert",li)
     elseif prefix == "+" then
-      table.insert(left_lines, "")
+      --table.insert(left_lines, "")
       table.insert(right_lines, content)
-      table.insert(left_hl, false)
+      --table.insert(left_hl, false)
       table.insert(right_hl, "DiffAdd")  -- green
     elseif prefix == " " or prefix == "" then
       table.insert(left_lines, content)
