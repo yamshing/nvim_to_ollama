@@ -11,7 +11,7 @@ public:
     {
         puts( "赤" ) ;
     }
-		//Add function AppleNum
+		//Add function AppleNum which return 10
 } ;
 
 class Banana
