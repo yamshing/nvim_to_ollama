@@ -159,31 +159,39 @@ function NvimToOllama:show_reply_to_floating_win(reply)
   self:show_diff_floating_window(diff)
 end
 function NvimToOllama:get_visual_selection()
-	local start_pos = vim.fn.getpos("'<")
-	local end_pos = vim.fn.getpos("'>")
+  local start_pos = vim.fn.getpos("'<")
+  local end_pos = vim.fn.getpos("'>")
+	vim.print(start_pos)
+	vim.print(end_pos)
 
-	local start_line = start_pos[2]
-	local start_col = start_pos[3]
-	local end_line = end_pos[2]
-	local end_col = end_pos[3]
+  -- Check if no visual selection is made
+  if (start_pos[2] == end_pos[2] and start_pos[3] == end_pos[3]) or (start_pos[2] ~= end_pos[2] and start_pos[3] == 1 and end_pos[3] == 1) then
+    print("No visual selection detected.")
+    return ""
+  end
 
-	if start_line > end_line or (start_line == end_line and start_col > end_col) then
-		start_line, end_line = end_line, start_line
-		start_col, end_col = end_col, start_col
-	end
+  local start_line = start_pos[2]
+  local start_col = start_pos[3]
+  local end_line = end_pos[2]
+  local end_col = end_pos[3]
 
-	local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+  if start_line > end_line or (start_line == end_line and start_col > end_col) then
+    start_line, end_line = end_line, start_line
+    start_col, end_col = end_col, start_col
+  end
 
-	if #lines == 0 then return "" end
+  local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
 
-	if #lines == 1 then
-		lines[1] = string.sub(lines[1], start_col, end_col)
-	else
-		lines[1] = string.sub(lines[1], start_col)
-		lines[#lines] = string.sub(lines[#lines], 1, end_col)
-	end
+  if #lines == 0 then return "" end
 
-	return table.concat(lines, "\n")
+  if #lines == 1 then
+    lines[1] = string.sub(lines[1], start_col, end_col)
+  else
+    lines[1] = string.sub(lines[1], start_col)
+    lines[#lines] = string.sub(lines[#lines], 1, end_col)
+  end
+
+  return table.concat(lines, "\n")
 end
  
 function NvimToOllama:process_chat_api_request(user_text)
@@ -223,10 +231,10 @@ function NvimToOllama:send_selection_to_chat(order)
 	 
   local user_text = self:get_visual_selection()
 
-  if user_text == "" then
-    print("No selection found.")
-    return
-  end
+  -- if user_text == "" then
+  --   print("No selection found.")
+  --   return
+  -- end
   self.m_user_input = user_text
 	user_text = head .. user_text
 	user_text = user_text .. foot
