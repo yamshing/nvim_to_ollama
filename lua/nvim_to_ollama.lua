@@ -218,7 +218,7 @@ end
  
 function NvimToOllama:send_selection_to_chat(order)
 	--local order = 'refactor this code by changing i to index'
-	local head = '< |User| > ' .. order .. ' and output just the code without explanation. Add ``` to show the language used:\n'
+	local head = '< |User| > ' .. order .. '\n'
 	local foot = '\n<|Assistant|>'
 	 
   local user_text = self:get_visual_selection()
