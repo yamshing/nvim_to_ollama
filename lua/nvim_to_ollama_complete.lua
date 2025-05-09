@@ -32,8 +32,14 @@ function NvimToOllamaComplete:complete(opt)
 
    local nvim_to_ollama = NvimToOllama.new()
    local result = nvim_to_ollama:process_chat_api_request(current_line)
-   vim.print("result ---------------------------------")
+   -- remove line which start with ```
+   result = result:gsub("```[^\n]*\n", "")
+   result = result:gsub("\n", "")
    vim.print(result)
+	 
+   -- append result at the end of the current line
+    vim.api.nvim_set_current_line(result)
+
 
    
 
