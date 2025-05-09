@@ -10,4 +10,11 @@ vim.api.nvim_create_user_command("VTOInsert", function(opts)
 	nvim_to_ollama_insert:insert(opts.args)
 end, { range = true, nargs = "?" })
 
+vim.api.nvim_create_user_command("VTOComplete", function(opts)
+	local NvimToOllamaComplete = require("nvim_to_ollama_complete")
+	local nvim_to_ollama_complete = NvimToOllamaComplete.new()
+	nvim_to_ollama_complete:complete(opts.args)
+end, { range = true, nargs = "?" })
+
+
 

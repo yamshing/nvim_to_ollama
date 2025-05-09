@@ -10,6 +10,7 @@ public:
     void AppleColor()
     {
         puts( "赤" ) ;
+				std::cout
     }
 		//Add function AppleNum which return 10
 } ;
@@ -50,6 +51,7 @@ public:
     virtual void ColorPuts()
     {
         m_apple.AppleColor() ;
+				cout <<
     }
 } ;
 
