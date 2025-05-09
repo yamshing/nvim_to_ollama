@@ -76,7 +76,7 @@ Answer only the line of  the code with response tag replaced with the code witho
 
 	result = result:gsub("```[^\n]*\n", "")
 	result = result:gsub("```", "")
-	result = result:gsub("\n", "")
+	-- result = result:gsub("\n", "")
 
 	vim.print("result ---------------------------------")
 	vim.print(result)
@@ -84,8 +84,12 @@ Answer only the line of  the code with response tag replaced with the code witho
 	if result:sub(1, #current_line) ~= current_line then
 		result = current_line .. result
 	end
+	local lines = {}
+	for line in result:gmatch("[^\r\n]+") do
+		table.insert(lines, line)
+	end
 
-	vim.api.nvim_buf_set_lines(0, cursor_pos[1] - 1 , cursor_pos[1], false, {result})
+	vim.api.nvim_buf_set_lines(0, cursor_pos[1] - 1 , cursor_pos[1], false, lines)
 
 end
 
