@@ -10,6 +10,41 @@ function NvimToOllamaComplete.new()
 end
  
 function NvimToOllamaComplete:complete(opt)
+	 
+	 local question = [[
+
+Find the apropriate code in response tag.
+Answer only the line of  the code with response tag replaced with the code without any comment and explanation:
+------------------------------
+class Car {
+	public:
+	int x;
+	int y;
+	int speed;
+	vector<int> positions;
+	vector<int> positions;
+	Car(int x = 0, int y = 0, int speed = 0) : x(x), y(y), speed(speed) {
+	}
+	void move() {
+		x += speed;
+		y += speed;
+		<RESPONSE>
+	}
+	void get(){
+	}
+	void setSpeed(int s) {
+	}
+};
+]]
+ 
+  local nvim_to_ollama = NvimToOllama.new()
+  local result = nvim_to_ollama:process_chat_api_request(question)
+  vim.print("result ---------------------------------")
+  vim.print(result)
+	 
+end
+ 
+function NvimToOllamaComplete:bak()
 	 --get the current line text
    local current_line = vim.api.nvim_get_current_line()
    local original_current_line = current_line
@@ -48,12 +83,12 @@ function NvimToOllamaComplete:complete(opt)
    end
 
    vim.api.nvim_buf_set_lines(0, current_line_number - 1, current_line_number, false, {result})
-   
 
 
-
-   
-
+   --Answer all the code with response tag replaced with the code.
+ --[[
+  Answer only the line which contains <RESPONSE> tag.
+  ]]
 end
 
 return NvimToOllamaComplete

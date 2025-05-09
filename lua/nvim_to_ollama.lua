@@ -196,7 +196,7 @@ end
  
 function NvimToOllama:process_chat_api_request(user_text)
   local payload = {
-    model = "qwen2.5-coder",
+    model = "gemma2",
     messages = {
       { role = "system", content = "You are a test assistant." },
       { role = "user", content = user_text },

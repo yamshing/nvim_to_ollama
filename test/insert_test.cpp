@@ -13,6 +13,7 @@ public:
     void move() {
         x += speed;
         y += speed;
+				std::cout
     }
     void setSpeed(int s) {
         speed = s;
