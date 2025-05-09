@@ -20,16 +20,14 @@ function NvimToOllamaComplete:complete(opt)
 	 --vim.print("current_file_content", current_file_content)
    local file_name = vim.api.nvim_buf_get_name(0)
    local file_type = vim.api.nvim_buf_get_option(0, "filetype")
-   local option_line =  "\n\n <file_name> :" .. file_name .. "\n <filetype>:" .. file_type 
-   option_line =  option_line .. "\n<context> : " .. current_file_content .. "\n\n"
+   local option_line =  "\n\n file_name :" .. file_name .. "\n filetype:" .. file_type 
+   option_line =  option_line .. "\ncontext : " .. current_file_content .. "\n\n"
    option_line =  option_line .. [[
-   <output> : In the response, put only the code without any explanation. 
+   output : In the response, put only the code without any explanation. 
    Do not add any extra text.
-   Responce must be only the completed line.
-   Responce must not contain given line to complete so that it can be used in the next line.
-   Responce must not contain <file_name> <filetype> <context> <output> tags.
+   Responce must not contain file_name filetype context output tags.
    ]]
-   current_line =  "complete this line :" .. current_line .. "\n\n with these options :" .. option_line
+   current_line =  "complete this line and replace <complete here> with the responce:" .. current_line .. "<complete here> \n\n with these options :" .. option_line
    --vim.print("current_line ---------------------------------")
    --vim.print(current_line)
 
